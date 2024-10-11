@@ -53,7 +53,29 @@
       - name: "Bash | Set default terminal"
         become: true
         user:
-          name: "michalis"
+          name: "devowlgr"
           shell: /usr/bin/zsh
     when: zsh_check.stdout.find('zsh --version') != -1
 
+  - name: "NVM | Install node version manager"
+    block:      
+     - name: "Download nvm Install Script"
+       ansible.builtin.get_url:
+         url:  https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh
+         dest: "{{ ansible_user_dir }}/nvm.install.sh"
+         force: true
+         mode: 0755
+
+     - name: "Install NVM"
+       shell: "{{ ansible_user_dir }}/nvm.install.sh"
+
+     - name: "Remove install script"
+       file:
+         path: "{{ ansible_user_dir }}/nvm.install.sh"
+         state: absent
+
+     - name: Install node
+       ansible.builtin.shell: "source {{ ansible_user_dir}}/.nvm/nvm.sh && nvm install --lts"
+       args:
+        executable: /bin/bash
+        chdir: "$HOME"
