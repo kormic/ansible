@@ -11,6 +11,7 @@
         - neovim
         - zsh
         - stow
+        - alacritty
       state: present
     when: ansible_distribution == "Ubuntu"
 
@@ -56,6 +57,18 @@
           name: "devowlgr"
           shell: /usr/bin/zsh
     when: zsh_check.stdout.find('zsh --version') != -1
+
+  - name: "Bring in my configuration"
+    block: 
+      - name: "Clone .dotfiles"
+        ansible.builtin.git:
+          repo: git@github.com:kormic/.dotfiles.git
+          dest: "{{ ansible_user_dir }}/.dotfiles"
+
+      - name: "Stow .dotfiles"
+        shell: 
+          chdir: "{{ ansible_user_dir }}/.dotfiles"
+          cmd: "stow ."
 
   - name: "NVM | Install node version manager"
     block:      
