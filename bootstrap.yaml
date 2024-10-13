@@ -37,57 +37,82 @@
     command: zsh --version
     register: zsh_check
 
-  - name: "ohmyzsh | Install oh-my-zsh"
+  - name: Install oh-my-zsh
     block:
-      - name: "Bash | Download oh-my-zsh Install Script"
+      - name: Download oh-my-zsh install script
         ansible.builtin.get_url:
           url: https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh    
           dest: "{{ ansible_user_dir }}/oh-my-zsh.install.sh"
           force: true
           mode: 0755
 
-      - name: "Run the install script"
+      - name: Run the install script
         become: true
         ansible.builtin.script:
           cmd: "{{ ansible_user_dir }}/oh-my-zsh.install.sh"
 
-      - name: "Bash | Set default terminal"
+      - name: Set default terminal
         become: true
         user:
           name: "devowlgr"
           shell: /usr/bin/zsh
     when: zsh_check.stdout.find('zsh --version') != -1
 
-  - name: "Bring in my configuration"
+  - name: Check if fonts directory exists
+    file:
+      path: "{{ lookup('env', 'HOME') }}/.local/share/fonts"
+      state: directory
+
+  - name: Check if Meslo Nerd Fonts exist
+    shell: "ls {{ ansible_user_dir }}/.local/share/fonts/Meslo*"
+    register: meslo_fonts_exists
+    ignore_errors: yes
+
+  - name: Install Meslo Nerd Fonts
+    when: meslo_fonts_exists is failed
+    block:
+      - name: Create Meslo Fonts folder
+        file:
+          path: "{{ ansible_user_dir }}/.local/share/fonts/Meslo"
+          state: directory
+          mode: '0755'
+
+      - name: Extract Meslo Fonts
+        ansible.builtin.unarchive:
+          src: https://github.com/ryanoasis/nerd-fonts/releases/download/v3.2.1/Meslo.zip
+          dest: "{{ ansible_user_dir }}/.local/share/fonts/Meslo/"
+          remote_src: yes
+
+  - name: Bring in my configuration
     block: 
-      - name: "Clone .dotfiles"
+      - name: Clone my .dotfiles repo
         ansible.builtin.git:
           repo: git@github.com:kormic/.dotfiles.git
           dest: "{{ ansible_user_dir }}/.dotfiles"
 
-      - name: "Stow .dotfiles"
+      - name: Stow .dotfiles
         shell: 
           chdir: "{{ ansible_user_dir }}/.dotfiles"
           cmd: "stow ."
 
-  - name: "NVM | Install node version manager"
+  - name: Install node version manager
     block:      
-     - name: "Download nvm Install Script"
+     - name: Download nvm Install Script
        ansible.builtin.get_url:
          url:  https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh
          dest: "{{ ansible_user_dir }}/nvm.install.sh"
          force: true
          mode: 0755
 
-     - name: "Install NVM"
+     - name: Install NVM
        shell: "{{ ansible_user_dir }}/nvm.install.sh"
 
-     - name: "Remove install script"
+     - name: Remove install script
        file:
          path: "{{ ansible_user_dir }}/nvm.install.sh"
          state: absent
 
-     - name: Install node
+     - name: Install latest Node
        ansible.builtin.shell: "source {{ ansible_user_dir}}/.nvm/nvm.sh && nvm install --lts"
        args:
         executable: /bin/bash
