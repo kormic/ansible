@@ -57,7 +57,7 @@
 
       - name: Remove the default .zshrc
         file:
-          path: "{{ ansible_user_dir }}" 
+          path: "{{ ansible_user_dir }}/.zshrc" 
           state: absent
 
       - name: Set zsh as default terminal
