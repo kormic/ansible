@@ -24,6 +24,7 @@
         - neovim
         - zsh
         - stow
+        - alacritty
       state: present
     when: ansible_distribution == "Fedora"
     
