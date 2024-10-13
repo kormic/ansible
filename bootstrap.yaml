@@ -53,6 +53,10 @@
         ansible.builtin.script:
           cmd: "{{ ansible_user_dir }}/oh-my-zsh.install.sh --unattended"
 
+      - name: Remove the default .zshrc
+        file:
+          path: "{{ ansible_user_dir }}" 
+          state: absent
 
       - name: Set zsh as default terminal
         become: true
