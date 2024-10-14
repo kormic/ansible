@@ -56,10 +56,8 @@
         ansible.builtin.script:
           cmd: "{{ ansible_user_dir }}/oh-my-zsh.install.sh --unattended"
 
-      - name: Remove the default .zshrc
-        file:
-          path: "{{ ansible_user_dir }}/.zshrc" 
-          state: absent
+      - name: Backup the default .zshrc
+        command: "mv {{ ansible_user_dir }}/.zshrc {{ ansible_user_dir }}/.zshrc_default_generated" 
 
       - name: Install zsh autosuggestions
         ansible.builtin.git:
