@@ -17,19 +17,6 @@
       state: present
     when: ansible_distribution == "Ubuntu"
 
-  - name: Install packages with dnf
-    become: true
-    ansible.builtin.dnf:
-      name:
-        - git
-        - tmux
-        - neovim
-        - zsh
-        - stow
-        - alacritty
-      state: present
-    when: ansible_distribution == "Fedora"
-    
   - name: Install Packer
     ansible.builtin.git:
       repo: https://github.com/wbthomason/packer.nvim
