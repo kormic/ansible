@@ -15,7 +15,7 @@
         - stow
         - alacritty
       state: present
-    when: ansible_distribution == "Ubuntu"
+    when: ansible_os_family == "Debian"
 
   - name: Install Packer
     ansible.builtin.git:
