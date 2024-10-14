@@ -10,4 +10,8 @@ Prerequisites: SSH should be set up first
 6. Source `packer.lua`
 7. Run `PackerSync` in neovim to install all the plugins
 8. Exit neovim and open it again so Mason can install any plugin / language server
-9. Start coding :)
+9. Log out and log in again for zsh
+10. Start coding :)
+
+TODO:
+1. Use ansible vault to store my SSH keys
