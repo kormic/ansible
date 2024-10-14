@@ -64,6 +64,18 @@
           name: "{{ username }}"
           shell: /usr/bin/zsh 
 
+      - name: Workaround for KDE-zsh combo
+        block:
+          - name: Get Desktop
+            shell:
+              cmd: "echo $XDG_CURRENT_DESKTOP"
+            register: current_desktop
+            
+          - name: Append zprofile
+            become: true
+            shell: "echo \"emulate sh -c 'source /etc/profile'\" >> /etc/zsh/zprofile"
+            when: "current_desktop.stdout == 'KDE'"
+
     when: omz_exists is failed
 
   - name: Check if fonts directory exists
