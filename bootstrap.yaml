@@ -2,7 +2,8 @@
   hosts: localhost
   vars:
     username: "{{ ansible_user_id }}"
-    github_ssh_key: "{{ lookup('ansible.builtin.file', '/home/$USER/ansible/.ssh/id_ed25519') }}"
+    ssh_location_in_repo: "{{ ansible_user_dir }}/ansible/.ssh/id_ed25519"
+    github_ssh_key: "{{ lookup('ansible.builtin.file',  ssh_location_in_repo) }}"
 
   tasks:
   - name: Create SSH dir
@@ -13,7 +14,7 @@
 
   - name: SSH private key
     copy: 
-      content: "{{ github_ssh_key }}"
+      content: "{{ github_ssh_key }}\n" # Add a line break at the end to prevent libcrypto error (permission denied)
       dest: "{{ ansible_user_dir }}/.ssh/id_ed25519"
       mode: '0400'
 
@@ -152,7 +153,13 @@
 
   - name: Bring in my configuration
     block: 
+      - name: Check dotfiles existence
+        shell: "ls {{ ansible_user_dir }}/.dotfiles"
+        register: dotfiles_exists
+        ignore_errors: yes
+
       - name: Clone my .dotfiles repo
+        when: dotfiles_exists is failed
         ansible.builtin.git:
           repo: git@github.com:kormic/.dotfiles.git
           dest: "{{ ansible_user_dir }}/.dotfiles"
