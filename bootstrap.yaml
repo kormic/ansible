@@ -2,20 +2,20 @@
   hosts: localhost
   vars:
     username: "{{ ansible_user_id }}"
-    github_ssh_key: "{{ lookup('ansible.builtin.file', '~/ansible/.ssh/id_ed25519') }}"
+    github_ssh_key: "{{ lookup('ansible.builtin.file', '/home/$USER/ansible/.ssh/id_ed25519') }}"
 
   tasks:
   - name: Create SSH dir
     file:
-      path: "{{ ansible_user_id }}/.ssh"
+      path: "{{ ansible_user_dir }}/.ssh"
       state: directory
-      mode: 0700
+      mode: '0700'
 
   - name: SSH private key
     copy: 
       content: "{{ github_ssh_key }}"
-      dest: "~/.ssh/id_ed25519"
-      mode: 0600
+      dest: "{{ ansible_user_dir }}/.ssh/id_ed25519"
+      mode: '0400'
 
   - name: Install packages with apt
     become: true
@@ -48,7 +48,7 @@
           url: https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh    
           dest: "/home/{{ username }}/oh-my-zsh.install.sh"
           force: true
-          mode: 0755
+          mode: '0755'
 
       - name: Run the install script
         become: true
@@ -136,7 +136,7 @@
         file:
           path: "{{ ansible_user_dir }}/.ssh/known_hosts"
           state: touch
-          mode: 600
+          mode: '0600'
 
       - name: Fetch key
         command: "ssh-keyscan -H github.com"
@@ -144,7 +144,7 @@
 
       - name: Add key to known_hosts
         known_hosts:
-          path: ~/.ssh/known_hosts
+          path: "{{ ansible_user_dir }}/.ssh/known_hosts"
           name: github.com
           key:  "{{ github_key.stdout }}"
 
@@ -156,7 +156,6 @@
         ansible.builtin.git:
           repo: git@github.com:kormic/.dotfiles.git
           dest: "{{ ansible_user_dir }}/.dotfiles"
-          key_file: "./.ssh/id_ed25519"
 
       - name: Stow .dotfiles
         shell: 
@@ -170,7 +169,7 @@
          url:  https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh
          dest: "{{ ansible_user_dir }}/nvm.install.sh"
          force: true
-         mode: 0755
+         mode: '0755'
 
      - name: Install NVM
        shell: "{{ ansible_user_dir }}/nvm.install.sh"
