@@ -2,8 +2,21 @@
   hosts: localhost
   vars:
     username: "{{ ansible_user_id }}"
+    github_ssh_key: "{{ lookup('ansible.builtin.file', '~/ansible/.ssh/id_ed25519') }}"
 
   tasks:
+  - name: Create SSH dir
+    file:
+      path: "{{ ansible_user_id }}/.ssh"
+      state: directory
+      mode: 0700
+
+  - name: SSH private key
+    copy: 
+      content: "{{ github_ssh_key }}"
+      dest: "~/.ssh/id_ed25519"
+      mode: 0600
+
   - name: Install packages with apt
     become: true
     ansible.builtin.apt:
@@ -112,12 +125,38 @@
       depth: 1
       clone: yes
 
+  - name: Check known_hosts existence
+    shell: "ls {{ ansible_user_dir }}/.ssh/known_hosts"
+    register: known_hosts_exists
+    ignore_errors: yes
+
+  - name: Add Github RSA key to known_hosts
+    block:
+      - name: Create known_hosts file
+        file:
+          path: "{{ ansible_user_dir }}/.ssh/known_hosts"
+          state: touch
+          mode: 600
+
+      - name: Fetch key
+        command: "ssh-keyscan -H github.com"
+        register: github_key
+
+      - name: Add key to known_hosts
+        known_hosts:
+          path: ~/.ssh/known_hosts
+          name: github.com
+          key:  "{{ github_key.stdout }}"
+
+    when: known_hosts_exists is failed 
+
   - name: Bring in my configuration
     block: 
       - name: Clone my .dotfiles repo
         ansible.builtin.git:
           repo: git@github.com:kormic/.dotfiles.git
           dest: "{{ ansible_user_dir }}/.dotfiles"
+          key_file: "./.ssh/id_ed25519"
 
       - name: Stow .dotfiles
         shell: 
