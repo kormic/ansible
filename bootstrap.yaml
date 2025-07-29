@@ -25,6 +25,7 @@
         - git
         - tmux
         - neovim
+        - ripgrep
         - zsh
         - stow
         - alacritty
